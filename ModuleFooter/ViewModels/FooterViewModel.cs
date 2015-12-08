@@ -28,13 +28,18 @@ namespace ModuleFooter.ViewModels
         {
             _eventAggregator = eventAggregator;
             _eventAggregator.GetEvent<BusyEvent>().Subscribe(BusyEventHandler, ThreadOption.UIThread);
+            _eventAggregator.GetEvent<MessageEvent>().Subscribe(MessageEventHandler, ThreadOption.UIThread);
             StatusMessage = "Ready";
         }
 
         public void BusyEventHandler(BusyModel busyModel)
         {
-            IsIndeterminate = busyModel.Busy;
-            StatusMessage = busyModel.Message;
+            IsIndeterminate = busyModel.Busy;            
+        }
+
+        public void MessageEventHandler(MessageModel messageModel)
+        {            
+            StatusMessage = messageModel.Message;
         }
     }
 }

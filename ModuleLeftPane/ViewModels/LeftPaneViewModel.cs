@@ -9,5 +9,16 @@ namespace ModuleLeftPane.ViewModels
 {
     public class LeftPaneViewModel : BindableBase
     {
+        private string _filename;
+        public string Filename
+        {
+            get { return _filename; }
+            set { SetProperty(ref _filename, value); }
+        }
+
+        public LeftPaneViewModel()
+        {
+            Filename = "Filename";
+        }
     }
 }

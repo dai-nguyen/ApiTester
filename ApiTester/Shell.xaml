@@ -6,7 +6,8 @@
         xmlns:prism="http://prismlibrary.com/"
         xmlns:local="clr-namespace:ApiTester"
         mc:Ignorable="d"
-        Title="REST API Tester" Height="550" Width="525">
+        Title="REST API Tester by Dai Nguyen" Height="550" Width="525">
+    
     <Grid Margin="5">
         
         <Grid.RowDefinitions>
@@ -23,10 +24,14 @@
                       Grid.ColumnSpan="2" 
                       prism:RegionManager.RegionName="HeaderRegion" />
         
-        <ItemsControl Grid.Row="1"
-                      Grid.Column="0"
-                      prism:RegionManager.RegionName="LeftRegion" />
-        
+        <ContentControl Grid.Row="1"
+                        Grid.Column="0"                      
+                        prism:RegionManager.RegionName="LeftRegion" />
+
+        <ContentControl Grid.Row="1"
+                        Grid.Column="1"                      
+                        prism:RegionManager.RegionName="RightRegion" />
+
         <ItemsControl Grid.Row="2" 
                       Grid.ColumnSpan="2" 
                       prism:RegionManager.RegionName="FooterRegion" />        

@@ -2,7 +2,6 @@
 {
     public class BusyModel
     {
-        public bool Busy { get; set; }             
-        public string Message { get; set; }
+        public bool Busy { get; set; }                     
     }
 }

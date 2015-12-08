@@ -4,9 +4,104 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ModuleRightPane.Views"
-             mc:Ignorable="d" 
-             d:DesignHeight="300" d:DesignWidth="300">
-    <Grid>
+             xmlns:infras="clr-namespace:Infrastructure.Converters;assembly=Infrastructure"
+             xmlns:prism="http://prismlibrary.com/"
+             prism:ViewModelLocator.AutoWireViewModel="True"
+             mc:Ignorable="d">
+
+    <Grid Margin="5">
+
+        <Grid.Resources>
+            <infras:EnumBooleanConverter x:Key="enumBooleanConverter" />
+        </Grid.Resources>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        
+        <Label Grid.Row="0"
+               Grid.Column="0"
+               Content="Endpoint:" />
+        
+        <TextBox Grid.Row="0"
+                 Grid.Column="1"
+                 Text="{Binding Endpoint, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+        <StackPanel Grid.Row="1" 
+                    Grid.ColumnSpan="2"
+                    Margin="5"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+            <RadioButton Margin="5,0,5,0" 
+                         GroupName="Actions" 
+                         Content="GET" 
+                         IsChecked="{Binding HttpAction, Mode=TwoWay, Converter={StaticResource enumBooleanConverter}, ConverterParameter=Get}" />
+            <RadioButton Margin="5,0,5,0" 
+                         GroupName="Actions" 
+                         Content="POST" 
+                         IsChecked="{Binding HttpAction, Mode=TwoWay, Converter={StaticResource enumBooleanConverter}, ConverterParameter=Post}" />
+            <RadioButton Margin="5,0,5,0" 
+                         GroupName="Actions" 
+                         Content="PUT" 
+                         IsChecked="{Binding HttpAction, Mode=TwoWay, Converter={StaticResource enumBooleanConverter}, ConverterParameter=Put}" />
+        </StackPanel>
+        
+        <Label Grid.Row="2"
+               Grid.ColumnSpan="2"
+               Content="Body" />
+        
+        <TextBox Grid.Row="3"                 
+                 Grid.ColumnSpan="2"
+                 AcceptsReturn="True"
+                 AcceptsTab="True"              
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                 Text="{Binding Body}" />
+
+        <StackPanel Grid.Row="4"
+                    Grid.ColumnSpan="2"
+                    Margin="5"
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal">
+
+            <Button Width="70"
+                    Margin="5,0,10,0"
+                    Content="New"                    
+                    Command="{Binding NewCommand}" />
+
+            <Button Width="70"
+                    Margin="10,0,10,0"
+                    Content="Save"                    
+                    Command="{Binding SaveCommand}" />
             
+            <Button Width="70"
+                    Margin="10,0,5,0"
+                    Content="Execute"
+                    Background="Blue"
+                    Foreground="White"
+                    Command="{Binding ExecuteCommand}" />
+            
+        </StackPanel>
+        
+        <Label Grid.Row="5"
+               Grid.ColumnSpan="2"
+               Content="Response" />
+        
+        <TextBox Grid.Row="6"
+                 Grid.ColumnSpan="2"
+                 IsReadOnly="True"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                 Text="{Binding Response}" />
     </Grid>
 </UserControl>

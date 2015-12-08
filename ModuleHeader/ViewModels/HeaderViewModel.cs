@@ -7,6 +7,7 @@ using Prism.Mvvm;
 using System;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,6 +16,7 @@ namespace ModuleHeader.ViewModels
     public class HeaderViewModel : BindableBase
     {
         private IEventAggregator _eventAggregator;
+        private HttpClient _httpClient;
 
         private bool _busy;
         public bool Busy
@@ -25,7 +27,10 @@ namespace ModuleHeader.ViewModels
                 if (SetProperty(ref _busy, value))
                 {
                     LoginCommand.RaiseCanExecuteChanged();
-                    _eventAggregator.GetEvent<BusyEvent>().Publish(new BusyModel { Busy = _busy, Message = Message });
+                    _eventAggregator.GetEvent<BusyEvent>().Publish(new BusyModel
+                    {
+                        Busy = _busy
+                    });
                 }
             }
         }
@@ -34,7 +39,16 @@ namespace ModuleHeader.ViewModels
         public string Message
         {
             get { return _message; }
-            set { SetProperty(ref _message, value); }
+            set
+            {
+                if (SetProperty(ref _message, value))
+                {
+                    _eventAggregator.GetEvent<MessageEvent>().Publish(new MessageModel
+                    {                        
+                        Message = Message
+                    });
+                }
+            }
         }
 
         private string _baseAddress;
@@ -88,7 +102,7 @@ namespace ModuleHeader.ViewModels
             }
         }
 
-        public DelegateCommand LoginCommand { get; set; }
+        public DelegateCommand LoginCommand { get; private set; }
 
         public HeaderViewModel(IEventAggregator eventAggregator)
         {
@@ -100,28 +114,39 @@ namespace ModuleHeader.ViewModels
         public async Task LoginAsync()
         {
             string err = "";
+            Token = "";
 
             try
             {
                 Message = "Please wait...";
                 Busy = true;
-                
-                using (HttpClient client = new HttpClient())
+
+                if (_httpClient != null)
                 {
-                    client.BaseAddress = new Uri(BaseAddress);
-                    client.DefaultRequestHeaders.Accept.Clear();
-                    HttpContent requestContent = new StringContent(
-                        string.Format("grant_type=password&username={0}&password={1}", UserID, Password),
-                        Encoding.UTF8, "application/x-www-form-urlencoded");
-
-                    var response = await client.PostAsync(TokenEndpoint, requestContent);
-
-                    if (!response.IsSuccessStatusCode)
-                        return;
-
-                    var token = await response.Content.ReadAsAsync<TokenModel>();
-                    Token = token.AccessToken;
+                    _httpClient.Dispose();
+                    _httpClient = null;
                 }
+
+                _httpClient = new HttpClient();
+
+
+                _httpClient.BaseAddress = new Uri(BaseAddress);
+                _httpClient.DefaultRequestHeaders.Accept.Clear();
+                HttpContent requestContent = new StringContent(
+                    string.Format("grant_type=password&username={0}&password={1}", UserID, Password),
+                    Encoding.UTF8, "application/x-www-form-urlencoded");
+
+                var response = await _httpClient.PostAsync(TokenEndpoint, requestContent);
+
+                if (!response.IsSuccessStatusCode)
+                    return;
+
+                var token = await response.Content.ReadAsAsync<TokenModel>();
+                Token = token.AccessToken;
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
+
+                _eventAggregator.GetEvent<HttpClientEvent>().Publish(_httpClient);
+
             }
             catch (Exception ex)
             {
@@ -130,7 +155,7 @@ namespace ModuleHeader.ViewModels
             finally
             {
                 Message = string.IsNullOrEmpty(err) ? "Done" : err;
-                Busy = false;                
+                Busy = false;
             }
 
             if (string.IsNullOrEmpty(err))
