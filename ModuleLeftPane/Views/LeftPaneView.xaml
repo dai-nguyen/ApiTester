@@ -18,8 +18,25 @@
         <Label Grid.Row="0" 
                Content="{Binding Filename}" />        
 
-        <ListView Grid.Row="1">
-            
+        <ListView Grid.Row="1" 
+                  ItemsSource="{Binding Items}" 
+                  SelectedItem="{Binding SelectedItem}">
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Delete"
+                              Command="{Binding DeleteItemCommand}" />
+                </ContextMenu>
+            </ListView.ContextMenu>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock FontWeight="Bold" 
+                                   Text="{Binding HttpAction}" />
+                        <TextBlock FontStyle="Italic" 
+                                   Text="{Binding Endpoint}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
         </ListView>
 
         <StackPanel Grid.Row="2"

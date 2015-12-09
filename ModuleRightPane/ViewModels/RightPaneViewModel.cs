@@ -1,4 +1,10 @@
-﻿using Infrastructure.Enums;
+﻿/** 
+ * This file is part of the ApiTester project.
+ * Copyright (c) 2015 Dai Nguyen
+ * Author: Dai Nguyen
+**/
+
+using Infrastructure.Enums;
 using Infrastructure.Events;
 using Infrastructure.Models;
 using Newtonsoft.Json;
@@ -7,6 +13,7 @@ using Prism.Events;
 using Prism.Mvvm;
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ModuleRightPane.ViewModels
@@ -14,6 +21,7 @@ namespace ModuleRightPane.ViewModels
     public class RightPaneViewModel : BindableBase
     {
         private IEventAggregator _eventAggregator;
+        private CancellationTokenSource _tokenSource;
         
         private bool _busy;
         public bool Busy
@@ -23,8 +31,8 @@ namespace ModuleRightPane.ViewModels
             {
                 if (SetProperty(ref _busy, value))
                 {
-                    //NewCommand.RaiseCanExecuteChanged();
-                    //SaveCommand.RaiseCanExecuteChanged();
+                    NewCommand.RaiseCanExecuteChanged();
+                    SaveCommand.RaiseCanExecuteChanged();
                     ExecuteCommand.RaiseCanExecuteChanged();
 
                     _eventAggregator.GetEvent<BusyEvent>().Publish(new BusyModel
@@ -51,7 +59,14 @@ namespace ModuleRightPane.ViewModels
             }
         }
 
-        private HttpClient _httpClient;
+        private string _lebelExecute;
+        public string LabelExecute
+        {
+            get { return _lebelExecute; }
+            set { SetProperty(ref _lebelExecute, value); }
+        }
+
+        private HttpClient _httpClient = null;
         public HttpClient HttpClient
         {
             get { return _httpClient; }
@@ -62,6 +77,13 @@ namespace ModuleRightPane.ViewModels
             }
         }
 
+        private Guid _id;
+        public Guid Id
+        {
+            get { return _id; }
+            set { SetProperty(ref _id, value); }
+        }
+
         private string _endpoint;
         public string Endpoint
         {
@@ -69,7 +91,10 @@ namespace ModuleRightPane.ViewModels
             set
             {
                 if (SetProperty(ref _endpoint, value))
+                {
+                    SaveCommand.RaiseCanExecuteChanged();
                     ExecuteCommand.RaiseCanExecuteChanged();
+                }
             }
         }
 
@@ -77,14 +102,29 @@ namespace ModuleRightPane.ViewModels
         public HttpActions HttpAction
         {
             get { return _httpAction; }
-            set { SetProperty(ref _httpAction, value); }
+            set
+            {
+                if (SetProperty(ref _httpAction, value))
+                {
+                    SaveCommand.RaiseCanExecuteChanged();
+                    ExecuteCommand.RaiseCanExecuteChanged();
+                }
+
+            }
         }
 
         private string _body;
         public string Body
         {
             get { return _body; }
-            set { SetProperty(ref _body, value); }
+            set
+            {
+                if (SetProperty(ref _body, value))
+                {
+                    SaveCommand.RaiseCanExecuteChanged();
+                    ExecuteCommand.RaiseCanExecuteChanged();
+                }
+            }
         }
 
         private string _response;
@@ -102,12 +142,17 @@ namespace ModuleRightPane.ViewModels
         {
             _eventAggregator = eventAggregator;
             _eventAggregator.GetEvent<HttpClientEvent>().Subscribe(HttpClientEventHandler);
+            _eventAggregator.GetEvent<HttpModelLoadEvent>().Subscribe(HttpModelLoadEventHandler);
             HttpAction = HttpActions.Get;
 
+            LabelExecute = Infrastructure.Properties.Resources.Execute;
+
+            NewCommand = new DelegateCommand(New, CanNew);
+            SaveCommand = new DelegateCommand(Save, CanSave);
             ExecuteCommand = DelegateCommand.FromAsyncHandler(ExecuteAsync, CanExecute);
         }
 
-        public void HttpClientEventHandler(HttpClient httpClient)
+        private void HttpClientEventHandler(HttpClient httpClient)
         {
             if (HttpClient != null)
             {
@@ -118,14 +163,58 @@ namespace ModuleRightPane.ViewModels
             HttpClient = httpClient;
         }
 
-        private async Task ExecuteAsync()
+        private void HttpModelLoadEventHandler(HttpModel model)
         {
+            if (_tokenSource != null && !_tokenSource.IsCancellationRequested)
+                _tokenSource.Cancel();
+            
+            Id = model != null ? model.Id : Guid.NewGuid();
+            Endpoint = model != null ? model.Endpoint : "";
+            HttpAction = model != null ? model.HttpAction : HttpActions.Get;
+            Body = model != null ? model.Body : "";
+        }
+
+        private void New()
+        {            
+            Id = Guid.NewGuid();
+            Endpoint = "";
+            HttpAction = HttpActions.Get;
+            Body = "";
+            Response = "";
+        }
+
+        private void Save()
+        {
+            Body = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(Body), Formatting.Indented);
+
+            _eventAggregator.GetEvent<HttpModelSaveEvent>().Publish(new HttpModel
+            {
+                Id = Id,
+                Endpoint = Endpoint,
+                HttpAction = HttpAction,
+                Body = Body
+            });
+        }
+
+        private async Task ExecuteAsync()
+        {            
             string err = "";
             Response = "";
-
+            
             try
             {
+                if (LabelExecute == Infrastructure.Properties.Resources.Cancel 
+                    && _tokenSource != null
+                    && !_tokenSource.IsCancellationRequested)
+                {                    
+                    _tokenSource.Cancel();                    
+                    return;
+                }
+                
+                LabelExecute = Infrastructure.Properties.Resources.Cancel;
                 Busy = true;
+                Message = Infrastructure.Properties.Resources.Wait;
+                _tokenSource = new CancellationTokenSource();
 
                 HttpResponseMessage response = null;
                 StringContent content = new StringContent(Body, System.Text.Encoding.UTF8, "application/json");
@@ -133,13 +222,13 @@ namespace ModuleRightPane.ViewModels
                 switch (HttpAction)
                 {
                     case HttpActions.Get:
-                        response = await HttpClient.GetAsync(Endpoint);
+                        response = await HttpClient.GetAsync(Endpoint, _tokenSource.Token);
                         break;
                     case HttpActions.Post:
-                        response = await HttpClient.PostAsync(Endpoint, content);
+                        response = await HttpClient.PostAsync(Endpoint, content, _tokenSource.Token);
                         break;
                     case HttpActions.Put:
-                        response = await HttpClient.PutAsJsonAsync(Endpoint, content);
+                        response = await HttpClient.PutAsJsonAsync(Endpoint, content, _tokenSource.Token);
                         break;
                 }
 
@@ -150,21 +239,40 @@ namespace ModuleRightPane.ViewModels
             }
             catch (Exception ex)
             {
-                err = ex.Message ?? "Error";
+                err = ex.Message ?? Infrastructure.Properties.Resources.Error;
             }
             finally
             {
-                Message = string.IsNullOrEmpty(err) ? "Done" : err;
-                Busy = false;
+                if (_tokenSource != null)
+                {
+                    _tokenSource.Dispose();
+                    _tokenSource = null;
+                }
+
+                Message = string.IsNullOrEmpty(err) ? Infrastructure.Properties.Resources.Ready : err;
+                LabelExecute = Infrastructure.Properties.Resources.Execute;
+                Busy = false;                
             }
+        }
+
+        private bool CanNew()
+        {
+            return !Busy;
+        }
+
+        private bool CanSave()
+        {
+            return !string.IsNullOrEmpty(Endpoint) 
+                && !string.IsNullOrWhiteSpace(Endpoint) 
+                && (HttpAction != HttpActions.Get ? (!string.IsNullOrEmpty(Body) && !string.IsNullOrWhiteSpace(Body)) : true);        
         }
 
         private bool CanExecute()
         {
-            return !string.IsNullOrEmpty(Endpoint) &&
-                !string.IsNullOrWhiteSpace(Endpoint) &&
-                !Busy &&
-                HttpClient != null;
+            return HttpClient != null
+                && !string.IsNullOrEmpty(Endpoint)
+                && !string.IsNullOrWhiteSpace(Endpoint)
+                && (HttpAction != HttpActions.Get ? (!string.IsNullOrEmpty(Body) && !string.IsNullOrWhiteSpace(Body)) : true);            
         }
     }
 }

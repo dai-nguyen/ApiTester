@@ -64,7 +64,10 @@
     <Compile Include="Enums\HttpActions.cs" />
     <Compile Include="Events\BusyEvent.cs" />
     <Compile Include="Events\HttpClientEvent.cs" />
+    <Compile Include="Events\HttpModelLoadEvent.cs" />
+    <Compile Include="Events\HttpModelSaveEvent.cs" />
     <Compile Include="Events\MessageEvent.cs" />
+    <Compile Include="Helpers\PasswordHelper.cs" />
     <Compile Include="Models\BusyModel.cs" />
     <Compile Include="Models\HttpModel.cs" />
     <Compile Include="Models\LoginModel.cs" />
@@ -72,9 +75,20 @@
     <Compile Include="Models\ProfileModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Models\TokenModel.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

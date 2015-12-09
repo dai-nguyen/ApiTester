@@ -1,4 +1,10 @@
-﻿using Microsoft.Practices.Unity;
+﻿/** 
+ * This file is part of the ApiTester project.
+ * Copyright (c) 2015 Dai Nguyen
+ * Author: Dai Nguyen
+**/
+
+using Microsoft.Practices.Unity;
 using ModuleRightPane.Views;
 using Prism.Modularity;
 using Prism.Regions;

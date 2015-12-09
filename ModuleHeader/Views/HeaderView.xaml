@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ModuleHeader"
+             xmlns:infras="clr-namespace:Infrastructure.Helpers;assembly=Infrastructure"
              xmlns:prism="http://prismlibrary.com/"
              prism:ViewModelLocator.AutoWireViewModel="True"
              mc:Ignorable="d" 
@@ -30,6 +31,7 @@
         <TextBox Grid.Row="0"
                  Grid.Column="1"
                  Margin="5"
+                 IsReadOnly="{Binding Busy}"
                  Text="{Binding BaseAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
         <Label Grid.Row="0"
@@ -38,6 +40,7 @@
         <TextBox Grid.Row="0"
                  Grid.Column="4"
                  Margin="5"
+                 IsReadOnly="{Binding Busy}"
                  Text="{Binding UserID, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
         <Label Grid.Row="1"
@@ -46,15 +49,16 @@
         <TextBox Grid.Row="1"
                  Grid.Column="1"
                  Margin="5"
+                 IsReadOnly="{Binding Busy}"
                  Text="{Binding TokenEndpoint, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
         <Label Grid.Row="1"
                Grid.Column="3"
                Content="Password:" />
-        <TextBox Grid.Row="1"
-                 Grid.Column="4"
-                 Margin="5"
-                 Text="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <PasswordBox Grid.Row="1"
+                     Grid.Column="4"
+                     Margin="5"                                                    
+                     infras:PasswordHelper.Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
         <Label Grid.Row="2"
                Grid.Column="0"
@@ -71,7 +75,7 @@
                 Grid.Column="4"
                 Margin="5"
                 Width="70"
-                Content="Login"
+                Content="{Binding LabelLogin}"
                 Command="{Binding LoginCommand}" />
 
     </Grid>

@@ -9,7 +9,7 @@ using Prism.Events;
 
 namespace Infrastructure.Events
 {
-    public class MessageEvent : PubSubEvent<MessageModel>
+    public class HttpModelLoadEvent : PubSubEvent<HttpModel>
     {
     }
 }

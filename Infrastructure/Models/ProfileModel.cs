@@ -1,4 +1,10 @@
-﻿using System;
+﻿/** 
+ * This file is part of the ApiTester project.
+ * Copyright (c) 2015 Dai Nguyen
+ * Author: Dai Nguyen
+**/
+
+using System;
 using System.Collections.Generic;
 
 namespace Infrastructure.Models

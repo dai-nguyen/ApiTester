@@ -35,6 +35,7 @@
         
         <TextBox Grid.Row="0"
                  Grid.Column="1"
+                 IsReadOnly="{Binding Busy}"
                  Text="{Binding Endpoint, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
         <StackPanel Grid.Row="1" 
@@ -45,20 +46,20 @@
             <RadioButton Margin="5,0,5,0" 
                          GroupName="Actions" 
                          Content="GET" 
-                         IsChecked="{Binding HttpAction, Mode=TwoWay, Converter={StaticResource enumBooleanConverter}, ConverterParameter=Get}" />
+                         IsChecked="{Binding HttpAction, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumBooleanConverter}, ConverterParameter=Get}" />
             <RadioButton Margin="5,0,5,0" 
                          GroupName="Actions" 
                          Content="POST" 
-                         IsChecked="{Binding HttpAction, Mode=TwoWay, Converter={StaticResource enumBooleanConverter}, ConverterParameter=Post}" />
+                         IsChecked="{Binding HttpAction, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumBooleanConverter}, ConverterParameter=Post}" />
             <RadioButton Margin="5,0,5,0" 
                          GroupName="Actions" 
                          Content="PUT" 
-                         IsChecked="{Binding HttpAction, Mode=TwoWay, Converter={StaticResource enumBooleanConverter}, ConverterParameter=Put}" />
+                         IsChecked="{Binding HttpAction, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource enumBooleanConverter}, ConverterParameter=Put}" />
         </StackPanel>
         
         <Label Grid.Row="2"
                Grid.ColumnSpan="2"
-               Content="Body" />
+               Content="Body:" />
         
         <TextBox Grid.Row="3"                 
                  Grid.ColumnSpan="2"
@@ -66,7 +67,8 @@
                  AcceptsTab="True"              
                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
-                 Text="{Binding Body}" />
+                 IsReadOnly="{Binding Busy}"
+                 Text="{Binding Body, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
         <StackPanel Grid.Row="4"
                     Grid.ColumnSpan="2"
@@ -86,7 +88,7 @@
             
             <Button Width="70"
                     Margin="10,0,5,0"
-                    Content="Execute"
+                    Content="{Binding LabelExecute}"
                     Background="Blue"
                     Foreground="White"
                     Command="{Binding ExecuteCommand}" />
@@ -95,7 +97,7 @@
         
         <Label Grid.Row="5"
                Grid.ColumnSpan="2"
-               Content="Response" />
+               Content="Response:" />
         
         <TextBox Grid.Row="6"
                  Grid.ColumnSpan="2"
