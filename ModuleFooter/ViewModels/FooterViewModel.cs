@@ -4,7 +4,6 @@
  * Author: Dai Nguyen
 **/
 
-using Infrastructure;
 using Infrastructure.Events;
 using Infrastructure.Models;
 using Prism.Events;
