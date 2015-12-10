@@ -9,19 +9,16 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="3*" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        
-        <ProgressBar Grid.Row="0" 
-                     Grid.Column="0"                      
-                     IsIndeterminate="{Binding IsIndeterminate}"  />
-        <Label Grid.Row="0" 
-               Grid.Column="1"               
-               Content="{Binding StatusMessage}" />
+        <StatusBar>
+            <StatusBarItem>
+                <ProgressBar Width="100"
+                             Height="16"
+                             IsIndeterminate="{Binding IsIndeterminate}"  />
+            </StatusBarItem>
+            <StatusBarItem>
+                <Label Content="{Binding StatusMessage}" />
+            </StatusBarItem>
+            
+        </StatusBar>
     </Grid>
 </UserControl>

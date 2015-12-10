@@ -6,15 +6,16 @@
 
 using Infrastructure.Events;
 using Infrastructure.Models;
+using Microsoft.Win32;
+using Newtonsoft.Json;
 using Prism.Commands;
 using Prism.Events;
+using Prism.Interactivity.InteractionRequest;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace ModuleLeftPane.ViewModels
 {
@@ -74,8 +75,9 @@ namespace ModuleLeftPane.ViewModels
             }
         }
 
-        public ObservableCollection<HttpModel> Items { get; private set; }
-        
+        public ObservableCollection<HttpModel> Items { get; private set; }        
+        public InteractionRequest<IConfirmation> ConfirmationRequest { get; private set; }
+
         public DelegateCommand LoadCommand { get; private set; }
         public DelegateCommand SaveAsCommand { get; private set; }
         public DelegateCommand DeleteItemCommand { get; private set; }
@@ -87,6 +89,7 @@ namespace ModuleLeftPane.ViewModels
             _eventAggregator.GetEvent<HttpModelSaveEvent>().Subscribe(HttpModelSaveEventHandler);
             Filename = Infrastructure.Properties.Resources.Filename;
             Items = new ObservableCollection<HttpModel>();
+            ConfirmationRequest = new InteractionRequest<IConfirmation>();
 
             LoadCommand = new DelegateCommand(Load);
             SaveAsCommand = new DelegateCommand(SaveAs);
@@ -111,17 +114,90 @@ namespace ModuleLeftPane.ViewModels
 
         private void Load()
         {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.DefaultExt = ".json";
+            dlg.Filter = "Json documents (.json)|*.json";
+            dlg.Multiselect = false;
+            dlg.CheckFileExists = true;
+            dlg.CheckPathExists = true;
 
+            bool? result = dlg.ShowDialog();
+
+            if (result != true)
+            {
+                Message = "Invalid file.";
+                return;
+            }
+
+            Items.Clear();
+            string err = "";
+
+            try
+            {
+                string filename = dlg.FileName;
+                int lastIndex = filename.LastIndexOf('\\') + 1;
+                Filename = filename.Substring(lastIndex);
+                var items = JsonConvert.DeserializeObject<IList<HttpModel>>(File.ReadAllText(filename));
+
+                if (items != null)
+                {
+                    foreach (var item in items)
+                    {
+                        Items.Add(item);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                err = ex.Message ?? Infrastructure.Properties.Resources.Error;
+            }
+            finally
+            {
+                Message = string.IsNullOrEmpty(err) ? Infrastructure.Properties.Resources.Ready : err;
+            }
         }
 
         private void SaveAs()
         {
+            SaveFileDialog dlg = new SaveFileDialog();
+            dlg.DefaultExt = ".json";
+            dlg.Filter = "Json documents (.json)|*.json";
+            
+            bool? result = dlg.ShowDialog();
 
+            if (result != true)                
+                return;
+            
+            string err = "";
+
+            try
+            {
+                string filename = dlg.FileName;
+                int lastIndex = filename.LastIndexOf('\\') + 1;
+                Filename = filename.Substring(lastIndex);
+                File.WriteAllText(filename, JsonConvert.SerializeObject(Items));                
+            }
+            catch (Exception ex)
+            {
+                err = ex.Message ?? Infrastructure.Properties.Resources.Error;
+            }
+            finally
+            {
+                Message = string.IsNullOrEmpty(err) ? Infrastructure.Properties.Resources.Ready : err;
+            }
         }
 
         private void DeleteItem()
         {
-            Items.Remove(SelectedItem);
+            ConfirmationRequest.Raise(new Confirmation
+            {
+                Content = Infrastructure.Properties.Resources.AreYouSure,
+                Title = Infrastructure.Properties.Resources.Confirmation
+            }, c =>
+            {
+                if (c.Confirmed)
+                    Items.Remove(SelectedItem);
+            });            
         }
 
         private bool CanDeleteItem()

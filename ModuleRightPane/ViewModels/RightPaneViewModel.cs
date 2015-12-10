@@ -185,7 +185,11 @@ namespace ModuleRightPane.ViewModels
 
         private void Save()
         {
-            Body = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(Body), Formatting.Indented);
+            if (!string.IsNullOrEmpty(Body) 
+                && !string.IsNullOrWhiteSpace(Body))
+            {
+                Body = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(Body), Formatting.Indented);
+            }
 
             _eventAggregator.GetEvent<HttpModelSaveEvent>().Publish(new HttpModel
             {

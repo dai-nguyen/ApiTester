@@ -6,7 +6,7 @@
         xmlns:prism="http://prismlibrary.com/"
         xmlns:local="clr-namespace:ApiTester"
         mc:Ignorable="d"
-        Title="REST API Tester by Dai Nguyen" Height="550" Width="525">
+        Title="REST API Tester by Dai Nguyen" Height="550" Width="525" MinHeight="555" MinWidth="525">
     
     <Grid Margin="5">
         
