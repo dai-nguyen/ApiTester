@@ -148,7 +148,14 @@ namespace ModuleHeader.ViewModels
                 Busy = true;
 
                 _tokenSource = new CancellationTokenSource();
-                                
+                
+                if (_httpClient != null)
+                {
+                    _httpClient.Dispose();
+                    _httpClient = null;
+                }
+
+                _httpClient = new HttpClient();
                 _httpClient.BaseAddress = new Uri(BaseAddress);
                 _httpClient.DefaultRequestHeaders.Accept.Clear();
                 HttpContent requestContent = new StringContent(
