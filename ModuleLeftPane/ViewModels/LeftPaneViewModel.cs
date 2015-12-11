@@ -62,6 +62,17 @@ namespace ModuleLeftPane.ViewModels
             set { SetProperty(ref _filename, value); }
         }
 
+        private LoginModel _loginModel;
+        public LoginModel LoginModel
+        {
+            get { return _loginModel; }
+            set
+            {
+                if (SetProperty(ref _loginModel, value))
+                    SaveAsCommand.RaiseCanExecuteChanged();
+            }
+        }
+
         private HttpModel _selectedItem;
         public HttpModel SelectedItem
         {
@@ -82,18 +93,18 @@ namespace ModuleLeftPane.ViewModels
         public DelegateCommand SaveAsCommand { get; private set; }
         public DelegateCommand DeleteItemCommand { get; private set; }
 
-
         public LeftPaneViewModel(IEventAggregator eventAggregator)
         {
             _eventAggregator = eventAggregator;
             _eventAggregator.GetEvent<HttpModelSaveEvent>().Subscribe(HttpModelSaveEventHandler);
+            _eventAggregator.GetEvent<LoginEvent>().Subscribe(LoginEventHandler);
             Filename = Infrastructure.Properties.Resources.Filename;
             Items = new ObservableCollection<HttpModel>();
             ConfirmationRequest = new InteractionRequest<IConfirmation>();
 
-            LoadCommand = new DelegateCommand(Load);
-            SaveAsCommand = new DelegateCommand(SaveAs);
-            DeleteItemCommand = new DelegateCommand(DeleteItem, CanDeleteItem);
+            LoadCommand = new DelegateCommand(LoadAction);
+            SaveAsCommand = new DelegateCommand(SaveAsAction);
+            DeleteItemCommand = new DelegateCommand(DeleteItemAction, CanDeleteItemAction);
         }
 
         private void HttpModelSaveEventHandler(HttpModel model)
@@ -105,14 +116,22 @@ namespace ModuleLeftPane.ViewModels
                     item.Endpoint = model.Endpoint;
                     item.HttpAction = model.HttpAction;
                     item.Body = model.Body;
+                    SelectedItem = item;
                     return;
                 }
             }
 
-            Items.Add(model);            
+            Items.Add(model);
+            SelectedItem = model;
+            SaveAsCommand.RaiseCanExecuteChanged();
         }
 
-        private void Load()
+        private void LoginEventHandler(LoginModel model)
+        {
+            LoginModel = model;
+        }
+
+        private void LoadAction()
         {
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.DefaultExt = ".json";
@@ -137,15 +156,17 @@ namespace ModuleLeftPane.ViewModels
                 string filename = dlg.FileName;
                 int lastIndex = filename.LastIndexOf('\\') + 1;
                 Filename = filename.Substring(lastIndex);
-                var items = JsonConvert.DeserializeObject<IList<HttpModel>>(File.ReadAllText(filename));
+                var profile = JsonConvert.DeserializeObject<ProfileModel>(File.ReadAllText(filename));
 
-                if (items != null)
+                if (profile != null)
                 {
-                    foreach (var item in items)
+                    foreach (var item in profile.Items)
                     {
                         Items.Add(item);
                     }
                 }
+
+                _eventAggregator.GetEvent<LoadLoginModelEvent>().Publish(profile != null ? profile.LoginModel : null);
             }
             catch (Exception ex)
             {
@@ -157,7 +178,7 @@ namespace ModuleLeftPane.ViewModels
             }
         }
 
-        private void SaveAs()
+        private void SaveAsAction()
         {
             SaveFileDialog dlg = new SaveFileDialog();
             dlg.DefaultExt = ".json";
@@ -175,7 +196,14 @@ namespace ModuleLeftPane.ViewModels
                 string filename = dlg.FileName;
                 int lastIndex = filename.LastIndexOf('\\') + 1;
                 Filename = filename.Substring(lastIndex);
-                File.WriteAllText(filename, JsonConvert.SerializeObject(Items));                
+
+                var profile = new ProfileModel
+                {
+                    LoginModel = LoginModel,
+                    Items = Items
+                };
+
+                File.WriteAllText(filename, JsonConvert.SerializeObject(profile, Formatting.Indented));                
             }
             catch (Exception ex)
             {
@@ -187,7 +215,7 @@ namespace ModuleLeftPane.ViewModels
             }
         }
 
-        private void DeleteItem()
+        private void DeleteItemAction()
         {
             ConfirmationRequest.Raise(new Confirmation
             {
@@ -196,18 +224,21 @@ namespace ModuleLeftPane.ViewModels
             }, c =>
             {
                 if (c.Confirmed)
+                {
                     Items.Remove(SelectedItem);
+                    SaveAsCommand.RaiseCanExecuteChanged();
+                }
             });            
         }
 
-        private bool CanDeleteItem()
+        private bool CanDeleteItemAction()
         {
             return SelectedItem != null;
         }
 
-        private bool CanSave()
+        private bool CanSaveAction()
         {
-            return Items.Count > 0;
-        }        
+            return Items.Count > 0 && LoginModel != null;
+        }           
     }
 }

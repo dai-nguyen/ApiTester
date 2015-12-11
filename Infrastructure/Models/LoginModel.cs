@@ -1,7 +1,7 @@
 ﻿/** 
- * This file is part of the ApiTester project.
- * Copyright (c) 2015 Dai Nguyen
- * Author: Dai Nguyen
+* This file is part of the ApiTester project.
+* Copyright (c) 2015 Dai Nguyen
+* Author: Dai Nguyen
 **/
 
 namespace Infrastructure.Models
@@ -10,6 +10,6 @@ namespace Infrastructure.Models
     {
         public string BaseAddress { get; set; }
         public string TokenEndpoint { get; set; }
-        public string UserID { get; set; }
+        public string UserID { get; set; }        
     }
 }

@@ -66,6 +66,8 @@
     <Compile Include="Events\HttpClientEvent.cs" />
     <Compile Include="Events\HttpModelLoadEvent.cs" />
     <Compile Include="Events\HttpModelSaveEvent.cs" />
+    <Compile Include="Events\LoadLoginEvent.cs" />
+    <Compile Include="Events\LoginEvent.cs" />
     <Compile Include="Events\MessageEvent.cs" />
     <Compile Include="Helpers\PasswordHelper.cs" />
     <Compile Include="Models\BusyModel.cs" />

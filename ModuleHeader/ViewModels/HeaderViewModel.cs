@@ -116,7 +116,7 @@ namespace ModuleHeader.ViewModels
                     LoginCommand.RaiseCanExecuteChanged();
             }
         }
-
+        
         public DelegateCommand LoginCommand { get; private set; }
 
         public HeaderViewModel(IEventAggregator eventAggregator)
@@ -124,8 +124,16 @@ namespace ModuleHeader.ViewModels
             _httpClient = new HttpClient();
             LabelLogin = Infrastructure.Properties.Resources.Login;
             _eventAggregator = eventAggregator;
+            _eventAggregator.GetEvent<LoadLoginModelEvent>().Subscribe(LoadLoginEventHandler);
             LoginCommand = DelegateCommand.FromAsyncHandler(LoginAsync, CanLogin);
             LoadCached();
+        }
+
+        private void LoadLoginEventHandler(LoginModel model)
+        {
+            BaseAddress = model.BaseAddress;
+            TokenEndpoint = model.TokenEndpoint;
+            UserID = model.UserID;
         }
 
         private async Task LoginAsync()
@@ -172,6 +180,12 @@ namespace ModuleHeader.ViewModels
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
 
                 _eventAggregator.GetEvent<HttpClientEvent>().Publish(_httpClient);
+                _eventAggregator.GetEvent<LoginEvent>().Publish(new LoginModel
+                {
+                    BaseAddress = BaseAddress,
+                    TokenEndpoint = TokenEndpoint,
+                    UserID = UserID
+                });
 
             }
             catch (Exception ex)
@@ -243,5 +257,7 @@ namespace ModuleHeader.ViewModels
             }
             catch { }
         }
+
+        
     }
 }

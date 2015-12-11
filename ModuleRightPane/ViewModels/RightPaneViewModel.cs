@@ -109,7 +109,6 @@ namespace ModuleRightPane.ViewModels
                     SaveCommand.RaiseCanExecuteChanged();
                     ExecuteCommand.RaiseCanExecuteChanged();
                 }
-
             }
         }
 
@@ -144,12 +143,13 @@ namespace ModuleRightPane.ViewModels
             _eventAggregator.GetEvent<HttpClientEvent>().Subscribe(HttpClientEventHandler);
             _eventAggregator.GetEvent<HttpModelLoadEvent>().Subscribe(HttpModelLoadEventHandler);
             HttpAction = HttpActions.Get;
+            Id = Guid.NewGuid();
 
             LabelExecute = Infrastructure.Properties.Resources.Execute;
 
-            NewCommand = new DelegateCommand(New, CanNew);
-            SaveCommand = new DelegateCommand(Save, CanSave);
-            ExecuteCommand = DelegateCommand.FromAsyncHandler(ExecuteAsync, CanExecute);
+            NewCommand = new DelegateCommand(NewAction, CanNewAction);
+            SaveCommand = new DelegateCommand(SaveAction, CanSaveAction);
+            ExecuteCommand = DelegateCommand.FromAsyncHandler(ExecuteActionAsync, CanExecuteAction);
         }
 
         private void HttpClientEventHandler(HttpClient httpClient)
@@ -167,14 +167,19 @@ namespace ModuleRightPane.ViewModels
         {
             if (_tokenSource != null && !_tokenSource.IsCancellationRequested)
                 _tokenSource.Cancel();
-            
-            Id = model != null ? model.Id : Guid.NewGuid();
-            Endpoint = model != null ? model.Endpoint : "";
-            HttpAction = model != null ? model.HttpAction : HttpActions.Get;
-            Body = model != null ? model.Body : "";
+
+            if (model != null)
+            {
+                Id = model.Id;
+                Endpoint = model.Endpoint;
+                HttpAction = model.HttpAction;
+                Body = model.Body;
+            }
+            else
+                NewAction();
         }
 
-        private void New()
+        private void NewAction()
         {            
             Id = Guid.NewGuid();
             Endpoint = "";
@@ -183,24 +188,37 @@ namespace ModuleRightPane.ViewModels
             Response = "";
         }
 
-        private void Save()
+        private void SaveAction()
         {
-            if (!string.IsNullOrEmpty(Body) 
-                && !string.IsNullOrWhiteSpace(Body))
+            string err = "";
+            try
             {
-                Body = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(Body), Formatting.Indented);
-            }
+                if (!string.IsNullOrEmpty(Body)
+                    && !string.IsNullOrWhiteSpace(Body))
+                {
+                    Body = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(Body), Formatting.Indented);
+                }
 
-            _eventAggregator.GetEvent<HttpModelSaveEvent>().Publish(new HttpModel
+                _eventAggregator.GetEvent<HttpModelSaveEvent>().Publish(new HttpModel
+                {
+                    Id = Id,
+                    Endpoint = Endpoint,
+                    HttpAction = HttpAction,
+                    Body = Body
+                });
+            }
+            catch (Exception ex)
             {
-                Id = Id,
-                Endpoint = Endpoint,
-                HttpAction = HttpAction,
-                Body = Body
-            });
+                err = ex.Message ?? Infrastructure.Properties.Resources.Error;
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(err))
+                    Message = err;
+            }
         }
 
-        private async Task ExecuteAsync()
+        private async Task ExecuteActionAsync()
         {            
             string err = "";
             Response = "";
@@ -239,7 +257,12 @@ namespace ModuleRightPane.ViewModels
                 if (!response.IsSuccessStatusCode)
                     Message = response.StatusCode.ToString();
 
-                Response = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(await response.Content.ReadAsStringAsync()), Formatting.Indented);
+                string temp = await response.Content.ReadAsStringAsync();
+
+                if (temp.StartsWith("{") || temp.StartsWith("["))
+                    Response = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(temp), Formatting.Indented);
+                else
+                    Response = temp;
             }
             catch (Exception ex)
             {
@@ -259,19 +282,19 @@ namespace ModuleRightPane.ViewModels
             }
         }
 
-        private bool CanNew()
+        private bool CanNewAction()
         {
             return !Busy;
         }
 
-        private bool CanSave()
+        private bool CanSaveAction()
         {
             return !string.IsNullOrEmpty(Endpoint) 
                 && !string.IsNullOrWhiteSpace(Endpoint) 
                 && (HttpAction != HttpActions.Get ? (!string.IsNullOrEmpty(Body) && !string.IsNullOrWhiteSpace(Body)) : true);        
         }
 
-        private bool CanExecute()
+        private bool CanExecuteAction()
         {
             return HttpClient != null
                 && !string.IsNullOrEmpty(Endpoint)
