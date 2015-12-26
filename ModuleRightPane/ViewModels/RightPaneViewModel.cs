@@ -239,7 +239,7 @@ namespace ModuleRightPane.ViewModels
                 _tokenSource = new CancellationTokenSource();
 
                 HttpResponseMessage response = null;
-                StringContent content = new StringContent(Body, System.Text.Encoding.UTF8, "application/json");
+                StringContent content = new StringContent(Body ?? "", System.Text.Encoding.UTF8, "application/json");
 
                 switch (HttpAction)
                 {

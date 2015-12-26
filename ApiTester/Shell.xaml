@@ -17,23 +17,29 @@
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="5" />
             <ColumnDefinition Width="3*" />
         </Grid.ColumnDefinitions>
         
         <ItemsControl Grid.Row="0" 
-                      Grid.ColumnSpan="2" 
+                      Grid.ColumnSpan="3" 
                       prism:RegionManager.RegionName="HeaderRegion" />
         
         <ContentControl Grid.Row="1"
                         Grid.Column="0"                      
                         prism:RegionManager.RegionName="LeftRegion" />
 
+        <GridSplitter Grid.Row="1" 
+                      Grid.Column="1" 
+                      Width="5" 
+                      HorizontalAlignment="Stretch" />
+        
         <ContentControl Grid.Row="1"
-                        Grid.Column="1"                      
+                        Grid.Column="2"                      
                         prism:RegionManager.RegionName="RightRegion" />
 
         <ItemsControl Grid.Row="2" 
-                      Grid.ColumnSpan="2" 
+                      Grid.ColumnSpan="3" 
                       prism:RegionManager.RegionName="FooterRegion" />        
     </Grid>
     
