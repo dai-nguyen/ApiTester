@@ -250,7 +250,7 @@ namespace ModuleRightPane.ViewModels
                         response = await HttpClient.PostAsync(Endpoint, content, _tokenSource.Token);
                         break;
                     case HttpActions.Put:
-                        response = await HttpClient.PutAsJsonAsync(Endpoint, content, _tokenSource.Token);
+                        response = await HttpClient.PutAsync(Endpoint, content, _tokenSource.Token);
                         break;
                 }
 
